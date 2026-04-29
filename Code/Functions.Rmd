@@ -1,0 +1,183 @@
+---
+title: "Functions"
+output: html_document
+---
+
+```{r setup}
+library(tidyverse)
+library(readxl)
+
+```
+
+```{r data import}
+template <- read_excel("./Manuscript/Sample sheet layout.xlsx")
+```
+
+
+```{r column name recoder}
+
+colname_recode <- function(df, verbose = T) {
+  
+  # ---- Check dependency ----
+  if (!requireNamespace("janitor", quietly = TRUE)) {
+    stop("Package 'janitor' is required. Install with install.packages('janitor')")
+  }
+  
+  # ---- Step 1: clean names ----
+  df <- janitor::clean_names(df)
+  current <- names(df)
+  
+  # ---- Load clean dictionary ----
+  dict <- list(
+    Samp_ID        = c("sample_id", "sampleid", "sampid"),
+    `18s_Fastq_ID` = c("x18s_fastq_id", "fastq_18s", "18s_id"),
+    `18s_run`      = c("run_18s", "18s_run"),
+    `16s_Fastq_ID` = c("16s_fastq", "fastq_16s", "16s_id"),
+    `16s_run`      = c("run_16s"),
+    Other_Fastq_ID = c("other_fastq", "alt_fastq"),
+    Other_seq_info = c("other_seq", "seq_info"),
+    Project        = c("proj"),
+    Source_Type    = c("source", "src_type"),
+    Trip_ID        = c("tripid"),
+    Trip           = c("trip_name"),
+    Date           = c("collection_date", "sample_date"),
+    Site           = c("location"),
+    Tributary      = c("trib"),
+    RM             = c("river_mile"),
+    Time           = c("collection_time"),
+    Species        = c("species_name"),
+    TL_mm          = c("total_length", "tl"),
+    FL_mm          = c("fork_length", "fl"),
+    Weight_g       = c("weight", "wt"),
+    Pit.Tag        = c("pit_tag", "tag"),
+    Notes          = c("comments")
+  )
+  dict_clean <- lapply(dict, janitor::make_clean_names)
+  
+  # ---- Initialize ----
+  new_names <- rep(NA_character_, length(current))
+  
+  # ---- Matching (dictionary only) ----
+  for (i in seq_along(current)) {
+    cn <- current[i]
+    
+    for (std in names(dict_clean)) {
+      if (cn %in% dict_clean[[std]]) {
+        new_names[i] <- std
+        break
+      }
+    }
+  }
+  
+  # ---- Identify unmatched ----
+  unmatched <- current[is.na(new_names)]
+  
+  if (length(unmatched) > 0) {
+    message("Unmatched columns: ", paste(unmatched, collapse = ", "))
+  }
+  
+  # ---- Apply names (keep original if unmatched) ----
+  final_names <- ifelse(is.na(new_names), current, new_names)
+  names(df) <- final_names
+  
+  # ---- Return useful output ----
+  return(list(
+    data = df,
+    mapping = data.frame(
+      original_clean = current,
+      new_name = final_names,
+      matched = !is.na(new_names)
+    ),
+    unmatched = unmatched
+  ))
+}
+
+colname_recode(test)
+  
+```
+  
+  
+```{r test}
+#supporting materials
+test <- read_excel("Manuscript/test colnames.xlsx")
+df <- test
+
+
+##function test
+  # ---- Check dependency ----
+  if (!requireNamespace("janitor", quietly = TRUE)) {
+    stop("Package 'janitor' is required. Install with install.packages('janitor')")
+  }
+  
+  # ---- Step 1: clean names ----
+  df <- janitor::clean_names(df)
+  current <- names(df)
+  
+  # ---- Load clean dictionary ----
+  dict <- list(
+    Samp_ID        = c("sample_id", "sampleid", "sampid"),
+    `18s_Fastq_ID` = c("x18s_fastq_id", "fastq_18s", "18s_id"),
+    `18s_run`      = c("run_18s", "18s_run"),
+    `16s_Fastq_ID` = c("16s_fastq", "fastq_16s", "16s_id"),
+    `16s_run`      = c("run_16s"),
+    Other_Fastq_ID = c("other_fastq", "alt_fastq"),
+    Other_seq_info = c("other_seq", "seq_info"),
+    Project        = c("proj"),
+    Source_Type    = c("source", "src_type"),
+    Trip_ID        = c("tripid"),
+    Trip           = c("trip_name"),
+    Date           = c("collection_date", "sample_date"),
+    Site           = c("location"),
+    Tributary      = c("trib"),
+    RM             = c("river_mile"),
+    Time           = c("collection_time"),
+    Species        = c("species_name"),
+    TL_mm          = c("total_length", "tl"),
+    FL_mm          = c("fork_length", "fl"),
+    Weight_g       = c("weight", "wt"),
+    Pit.Tag        = c("pit_tag", "tag"),
+    Notes          = c("comments")
+  )
+  dict_clean <- lapply(dict, janitor::make_clean_names)
+  
+  # ---- Initialize ----
+  new_names <- rep(NA_character_, length(current))
+  
+  # ---- Matching (dictionary only) ----
+  for (i in seq_along(current)) {
+    cn <- current[i]
+    
+    for (std in names(dict_clean)) {
+      if (cn %in% dict_clean[[std]]) {
+        new_names[i] <- std
+        break
+      }
+    }
+  }
+  
+  # ---- Identify unmatched ----
+  unmatched <- current[is.na(new_names)]
+  
+  if (length(unmatched) > 0) {
+    message("Unmatched columns: ", paste(unmatched, collapse = ", "))
+  }
+  
+  # ---- Apply names (keep original if unmatched) ----
+  final_names <- ifelse(is.na(new_names), current, new_names)
+  names(df) <- final_names
+  
+  # ---- Return useful output ----
+  return(list(
+    data = df,
+    mapping = data.frame(
+      original_clean = current,
+      standardized = final_names,
+      matched = !is.na(new_names)
+    ),
+    unmatched = unmatched
+  ))
+}
+    
+```
+  
+  
