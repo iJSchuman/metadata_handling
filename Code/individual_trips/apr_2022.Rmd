@@ -1,0 +1,29 @@
+---
+title: "apr_2022"
+output: html_document
+---
+
+```{r setup}
+library(readxl)
+library(tidyverse)
+setwd("C:/git/metadata_handling")
+```
+
+
+```{r data import}
+X2022_April <- read_excel("Data/Raw/2022 April.xlsx")
+View(X2022_April)
+
+X2022_April_b <- read_excel("Data/Raw/2022 April b.xlsx")
+View(X2022_April_b)
+```
+
+```{r column name fixing}
+april_cnames <- colname_recode(X2022_April)
+april_b_cnames <- colname_recode(X2022_April_b)
+```
+
+```{r column content fixes}
+april_clean <- april_cnames %>%
+  mutate(`18s_Fastq_ID` = .$Other_seq_info)
+```
