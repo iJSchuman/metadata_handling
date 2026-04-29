@@ -31,11 +31,11 @@ colname_recode <- function(df, verbose = T) {
     Samp_ID = c("samp_id", "sample id"),
     Trip_ID = c("trip id", "trip_id", "s_trip_id", "id", "sample"),
     Trip = c("trip"),
-    Project = c("bioproject", "project"),
+    Project = c("bioproject", "project", "bio_project"),
     Source_Type = c("type", "source_type"),
-    Date = c("date", "col date", "collection date"),
+    Date = c("date", "date_x", "col date", "collection date"),
     Time = c("time", "capture_time", "S_END_DATE_TIME", "end_datetime"),
-    Site = c("site", "river mile", "rm", "start_rm", "s_river_mile"),
+    Site = c("site", "river mile", "river_mile_x", "rm", "start_rm", "s_river_mile"),
     Tributary = c("tributary"),
     RM = c(),
     Species = c("species", "fish", "species_code"),
@@ -141,7 +141,12 @@ colname_recode <- function(df, verbose = T) {
   return(df)
 }
 
+
+
 fixed_test <- colname_recode(test)
+
+KB2023test <- colname_recode(X2023_April_KB)
+rev2025test <- colname_recode(X2025_revena_complete)
   
 ```
   
