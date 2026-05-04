@@ -151,6 +151,177 @@ rev2025test <- colname_recode(X2025_revena_complete)
 ```
   
   
+```{r column formatting}
+coerce_with_validation <- function(df, schema) {
+  
+  schema <- list(
+    Samp_ID = "character",
+    `18s_Fastq_ID` = "character",
+    `18s_run` = "factor",
+    `16s_Fastq_ID` = "character",
+    `16s_run` = "factor",
+    Other_Fastq_ID = "character",
+    Other_seq_info = "character",
+    Project = "factor",
+    Source_Type = "factor",
+    Trip_ID = "character",
+    Trip = "factor",
+    Date = "Date",
+    Site = "factor",
+    Tributary = "logical",   # Y/N
+    RM = "numeric",
+    Time = "factor",
+    Species = "factor",
+    TL_mm = "numeric",
+    FL_mm = "numeric",
+    Weight_g = "numeric",
+    `Pit.Tag` = "character",
+    Bait = "character",
+    Iso = "logical",
+    Fecal = "logical",
+    Skin = "factor",
+    Eyes = "factor",
+    Dorsal = "factor",
+    Caudal = "factor",
+    Pectoral = "factor",
+    Operculum = "factor",
+    Gills = "factor",
+    Sex = "factor",
+    Crew = "character",
+    Notes = "character"
+  )
+  
+  #sort columns based on schema
+  all_cols <- names(df)
+  matching_cols <- intersect(names(df), names(schema))
+  non_matching_cols <- setdiff(all_cols, names(schema))
+  
+  if (length(matching_cols) == 0) {
+    stop("No colnames match standard format")
+  }
+  
+  # Track results
+report <- data.frame(
+  column = character(),
+  original_type = character(),
+  target_type = character(),
+  converted = logical(),
+  in_schema = logical(),
+  stringsAsFactors = FALSE
+)
+
+  
+  error_list <- list()
+  
+  # Helper conversion function
+  convert_col <- function(x, type) {
+    if (type == "character") return(as.character(x))
+    if (type == "numeric") return(as.numeric(x))
+    if (type == "integer") return(as.integer(x))
+    if (type == "factor") return(as.factor(x))
+    if (type == "Date") return(as.Date(x))
+    
+    if (type == "logical") {
+      # Handle Y/N, TRUE/FALSE
+      return(ifelse(
+        toupper(x) %in% c("Y", "YES", "TRUE"), TRUE,
+        ifelse(toupper(x) %in% c("N", "NO", "FALSE"), FALSE, NA)
+      ))
+    }
+    
+    stop(paste("Unsupported type:", type))
+  }
+  
+  for (col in matching_cols) {
+    original <- df[[col]]
+    
+    #fix NAs
+    original <- if (is.character(original)) {
+      trimmed <- trimws(original)
+      trimmed[trimmed %in% c("NA", "N/A", "", "NULL")] <- NA
+      trimmed
+    } else {
+      original
+    }
+    original_type <- class(original)[1]
+    target_type <- schema[[col]]
+    
+    # Track NA before conversion
+    na_before <- is.na(original)
+    
+    converted <- FALSE
+    new_col <- original
+    
+    # Attempt conversion
+    suppressWarnings({
+      new_col <- tryCatch(
+        convert_col(original, target_type),
+        error = function(e) e
+      )
+    })
+    
+    if (inherits(new_col, "error")) {
+      error_list[[col]] <- "Conversion failed entirely"
+      next
+    }
+    
+    converted <- !identical(class(original)[1], class(new_col)[1])
+    
+    # Detect NEW NAs
+    na_after <- is.na(new_col)
+    new_na_positions <- which(!na_before & na_after)
+    
+    if (length(new_na_positions) > 0) {
+      bad_values <- unique(original[new_na_positions])
+      error_list[[col]] <- head(bad_values, 5)
+    }
+    
+    df[[col]] <- new_col
+    
+    report <- rbind(report, data.frame(
+      column = col,
+      in_schema = TRUE,
+      original_type = original_type,
+      target_type = target_type,
+      converted = converted,
+      stringsAsFactors = FALSE
+    ))
+  }
+  
+  
+if (length(non_matching_cols) > 0) {
+  extra_rows <- data.frame(
+    column = non_matching_cols,
+    in_schema = FALSE,
+    original_type = sapply(df[non_matching_cols], function(x) class(x)[1]),
+    target_type = NA,
+    converted = FALSE,
+    stringsAsFactors = FALSE
+  )
+  
+  report <- rbind(report, extra_rows)
+}
+
+  
+  # If any errors → return error report only
+  if (length(error_list) > 0) {
+    return(list(
+      status = "error",
+      problems = error_list
+    ))
+  }
+  
+  # Otherwise return success report
+
+message("All columns successfully matched to target types.")
+
+print(report)   # optional but useful
+
+return(df)
+
+}
+```
+  
 ```{r test}
 
 ```
