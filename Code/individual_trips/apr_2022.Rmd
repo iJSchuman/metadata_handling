@@ -25,5 +25,8 @@ april_b_cnames <- colname_recode(X2022_April_b)
 
 ```{r column content fixes}
 april_clean <- april_cnames %>%
-  mutate(`18s_Fastq_ID` = .$Other_seq_info)
+  mutate(`18s_Fastq_ID` = .$Other_seq_info) %>%
+  mutate(Trip_ID = str_extract(.$id_6, "^[^-]+"))
+
+april_formatted <- coerce_with_validation(april_clean)
 ```
